@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+build
+dist
+*egg-info
+.coverage
+.ipynb_checkpoints
+
+#syncthing
+.syncthing.*
+
+.DS_Store
