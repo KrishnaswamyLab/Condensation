@@ -1,4 +1,4 @@
-Multiscale PHATE
+Diffusion Condenastion
 ================
 
 [![Latest PyPi version](https://img.shields.io/pypi/v/multiscale_phate.svg)](https://pypi.org/project/multiscale_phate/)
