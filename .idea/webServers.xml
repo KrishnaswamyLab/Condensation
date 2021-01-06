@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="68b8998b-ab3d-4f93-95bb-fa630fe9f04d" name="orkney" url="http://172.23.213.49 ">
+        <fileTransfer rootFolder="/home/mkuchroo/" accessType="SFTP" host="orkney" port="22" sshConfigId="cccb2cee-8841-435d-be13-e7441f12ace0" sshConfig="mkuchroo@orkney:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

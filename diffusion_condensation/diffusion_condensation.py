@@ -1,8 +1,8 @@
-from . import tree, embed, utils, visualize
+from . import tree, embed, utils, visualize, condense
 
 
-class Multiscale_PHATE(object):
-    """Multscale PHATE operator which performs dimensionality reduction and clustering across granularities.
+class Diffusion_Condensation(object):
+    """Diffusion Condensation operator performs topological data analysis to identify cellular groupings across granularities.
 
     Parameters
     ----------
@@ -12,9 +12,6 @@ class Multiscale_PHATE(object):
     landmarks : int, default: 2000
         number of landmarks to compute diffusion potential
         coordinates on
-    partitions : int, default: None
-        number of partitions to split data into in initial
-        coarse graining. Only applies ot large datasets
     granularity : float, default: .1
         Fraction of silverman bandwidth to set initial
          kernel bandwidth to
@@ -65,11 +62,6 @@ class Multiscale_PHATE(object):
     merge_threshold : float
         Distance threshold below which cells are merged in Diffusion Condensation
         process
-    gradient : list
-        Tracks shifts in data density from one iteration to the next
-    levels : list
-        List of salient resolutions for downstream analysis, computed via gradient
-        analysis
     random_state : integer or numpy.RandomState, optional, default: None
         The generator used to initialize SMACOF (metric, nonmetric) MDS
         If an integer is given, it fixes the seed
@@ -79,7 +71,6 @@ class Multiscale_PHATE(object):
     ----------
     scale
     landmarks
-    partitions
     granularity
     n_pca
     decay
@@ -87,6 +78,7 @@ class Multiscale_PHATE(object):
     knn
     n_jobs
     NxTs
+    manifold
     Xs
     Ks
     merges
@@ -97,8 +89,6 @@ class Multiscale_PHATE(object):
     partition_clusters
     dp_pca
     epsilon
-    merge_threshold
-    gradient
     levels
 
     """
@@ -107,7 +97,6 @@ class Multiscale_PHATE(object):
         self,
         scale=1.025,
         landmarks=2000,
-        partitions=None,
         granularity=0.1,
         n_pca=None,
         decay=40,
@@ -118,7 +107,6 @@ class Multiscale_PHATE(object):
     ):
         self.scale = scale
         self.landmarks = landmarks
-        self.partitions = partitions
         self.granularity = granularity
         self.n_pca = n_pca
         self.decay = decay
@@ -126,6 +114,7 @@ class Multiscale_PHATE(object):
         self.knn = knn
         self.n_jobs = n_jobs
         self.random_state = random_state
+        self.manifold = None
         self.NxTs = None
         self.Xs = None
         self.Ks = None
@@ -138,13 +127,11 @@ class Multiscale_PHATE(object):
         self.dp_pca = None
         self.epsilon = None
         self.merge_threshold = None
-        self.gradient = None
-        self.levels = None
 
         super().__init__()
 
     def fit(self, X):
-        """Builds Diffusion Condensation tree and computes ideal resolutions.
+        """Builds manifold for tree computation.
 
         Parameters
         ----------
@@ -155,17 +142,13 @@ class Multiscale_PHATE(object):
 
         Returns
         -------
-        multiscale_phate_operator : Multiscale_PHATE
+        diffusion_condensation_operator : Diffusion_Condensation
         The estimator object
         """
         self.X = X
         self.hash = utils.hash_object(X)
         (
-            self.NxTs,
-            self.Xs,
-            self.Ks,
-            self.merges,
-            self.Ps,
+            self.manifold,
             self.diff_op,
             self.data_pca,
             self.pca_op,
@@ -173,11 +156,10 @@ class Multiscale_PHATE(object):
             self.dp_pca,
             self.epsilon,
             self.merge_threshold,
-        ) = tree.build_tree(
+        ) = tree.build_manifold(
             X,
             scale=self.scale,
             landmarks=self.landmarks,
-            partitions=self.partitions,
             granularity=self.granularity,
             n_pca=self.n_pca,
             decay=self.decay,
@@ -187,75 +169,59 @@ class Multiscale_PHATE(object):
             random_state=self.random_state,
         )
 
-        self.gradient = embed.compute_gradient(self.Xs, self.merges)
-        self.levels = embed.get_levels(self.gradient)
-
-        return self.levels
+        return
 
     def transform(
-        self,
-        visualization_level=None,
-        cluster_level=None,
-        coarse_cluster_level=None,
-        coarse_cluster=None,
-        repulse=False,
+        self
     ):
-        """Short summary.
+        """Computes diffusion homology from manifold geometry.
         Parameters
         ----------
-        visualization_level : int, default = levels[-2]
-            Resolution of Diffusion Condensation tree to embed.
-        cluster_level : int, default = levels[2]
-            Resolution of Diffusion Condensation tree to visualize clusters.
-        coarse_cluster_level : int, default = None
-            Resolution of Diffusion Condensation tree at which to identify
-            clusters. Setting this variable to a level of the tree allows
-            for 'zoom in' capabilities when the cluster at this resolution
-            is set by 'coarse_cluster'.
-        coarse_cluster : int, default = None
-            Cluster in 'coarse_cluster_level' to zoom in on.
-        repulse  : bool, default = False
-            Allows for repulsion between points in multiscale embedding.
+
         Returns
         -------
-        embedding : array, shape=[number of points in visualization_level, 2]
-            Aggregated points embedded in a lower dimensional space using
-            Multiscale PHATE
-        clusters : array shape = [number of points in visualization_level]
-            Cluster labels of aggregated points as found at the granularity
-            of cluster_level
-        sizes : array shape = [number of coarse grained samples]
-            Number of points aggregated into each point as visualized at
-            the granularity of visualization_level
+        tree : list of lists, shape=[number of cells, number of levels of diffusion homology]
+            cluster labels for each cell across granularities
+            Diffusion Condensation
         """
+        (self.NxTs,
+         self.Xs,
+         self.Ks,
+         self.merges,
+         self.Ps
+        ) = condense.condense(
+            self.manifold,
+            self.partition_clusters,
+            self.scale,
+            self.epsilon,
+            self.merge_threshold,
+            self.n_jobs,
+            random_state=self.random_state,
+        )
+        return self.NxTs
 
-        if visualization_level is None:
-            visualization_level = self.levels[2]
-        if cluster_level is None:
-            cluster_level = self.levels[-2]
-        if coarse_cluster_level is None and coarse_cluster is None:
-            return visualize.get_visualization(
-                self.Xs,
-                self.NxTs,
-                cluster_level,
-                visualization_level,
-                repulse,
-                random_state=self.random_state,
-            )
-        else:
-            return embed.get_zoom_visualization(
-                self.Xs,
-                self.NxTs,
-                visualization_level,
-                cluster_level,
-                coarse_cluster_level,
-                coarse_cluster,
-                self.n_jobs,
-                random_state=self.random_state,
-            )
+    def fit_transform(self, X):
+        """Builds Diffusion Condensation tree, identifies ideal resolutions and returns
+        clusters.
 
-    def build_tree(self):
-        """Computes and returns a tree from the Diffusion Condensation process.
+        Parameters
+        ----------
+        X : array, shape=[n_samples, n_features]
+            input data with `n_samples` samples and `n_dimensions`
+            dimensions. Accepted data types: `numpy.ndarray`,
+            `scipy.sparse.spmatrix` and `pd.DataFrame`.
+
+        Returns
+        -------
+        tree : list of lists, shape=[number of cells, number of levels of diffusion homology]
+            cluster labels for each cell across granularities
+            Diffusion Condensation
+        """
+        self.fit(X)
+        return self.transform()
+
+    def visualize_homology(self):
+        """Compute and returns a tree from the Diffusion Condensation process.
 
         Returns
         -------
@@ -267,33 +233,7 @@ class Multiscale_PHATE(object):
             self.data_pca, self.diff_op, self.NxTs, self.merges, self.Ps
         )
 
-    def fit_transform(self, X):
-        """Builds Diffusion Condensation tree, identifies ideal resolutions and returns
-         Multiscale PHATE embedding and clusters.
-
-        Parameters
-        ----------
-        X : array, shape=[n_samples, n_features]
-            input data with `n_samples` samples and `n_dimensions`
-            dimensions. Accepted data types: `numpy.ndarray`,
-            `scipy.sparse.spmatrix` and `pd.DataFrame`.
-
-        Returns
-        -------
-        embedding : array, shape=[number of points in visualization_level, 2]
-            Aggregated points embedded in a lower dimensional space using
-            Multiscale PHATE
-        clusters : array shape = [number of points in visualization_level]
-            Cluster labels of aggregated points as found at the granularity
-            of cluster_level
-        sizes : array shape = [number of coarse grained samples]
-            Number of points aggregated into each point as visualized at
-            the granularity of visualization_level
-        """
-        self.fit(X)
-        return self.transform()
-
-    def get_tree_clusters(self, cluster_level):
+    def get_homology_clusters(self, cluster_level):
         """Colors Diffusion Condensation tree by a granularity of clusters.
 
         Parameters

@@ -4,11 +4,10 @@ import sklearn.decomposition
 from . import compress, diffuse, condense
 
 
-def build_tree(
+def build_manifold(
     data_input,
     scale=1.025,
-    landmarks=1000,
-    partitions=None,
+    landmarks=2000,
     granularity=0.1,
     n_pca=None,
     decay=40,
@@ -27,8 +26,6 @@ def build_tree(
         Description of parameter `scale`.
     landmarks : type
         Description of parameter `landmarks`.
-    partitions : type
-        Description of parameter `partitions`.
     granularity : type
         Description of parameter `granularity`.
     n_pca : type
@@ -52,26 +49,18 @@ def build_tree(
         Description of returned object.
 
     """
-    with tasklogger.log_task("Multiscale PHATE tree"):
+    with tasklogger.log_task("Diffusion Condensation Manifold"):
         N, features = data_input.shape
 
         # Computing compression features
-        n_pca, partitions = compress.get_compression_features(
-            N, features, n_pca, partitions, landmarks
+        n_pca = compress.get_compression_features(
+            N, features, n_pca
         )
 
         with tasklogger.log_task("PCA"):
             pca_op = sklearn.decomposition.PCA(n_components=n_pca)
             data_pca = pca_op.fit_transform(np.array(data_input))
         clusters = np.arange(N)
-
-        # Subsetting if required
-        if partitions != None:
-            partition_clusters = compress.subset_data(
-                data_pca, partitions, n_jobs=n_jobs, random_state=random_state
-            )
-            data_pca = compress.merge_clusters(data_pca, partition_clusters)
-            clusters = partition_clusters
 
         X, diff_op, diff_pca = diffuse.compute_diffusion_potential(
             data_pca, N, decay, gamma, knn, landmarks, n_jobs, random_state=random_state
@@ -81,22 +70,23 @@ def build_tree(
             X, granularity=granularity
         )
 
-        NxTs, Xs, Ks, Merges, Ps = condense.condense(
-            X,
-            clusters,
-            scale,
-            epsilon,
-            merge_threshold,
-            n_jobs,
-            random_state=random_state,
-        )
+        #NxTs, Xs, Ks, Merges, Ps = condense.condense(
+        #    X,
+        #    clusters,
+        #    scale,
+        #    epsilon,
+        #    merge_threshold,
+        #    n_jobs,
+        #    random_state=random_state,
+        #)
 
     return (
-        NxTs,
-        Xs,
-        Ks,
-        Merges,
-        Ps,
+        #NxTs,
+        #Xs,
+        #Ks,
+        #Merges,
+        #Ps,
+        X,
         diff_op,
         data_pca,
         pca_op,
