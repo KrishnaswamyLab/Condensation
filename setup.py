@@ -14,7 +14,9 @@ install_requires = [
 
 test_requires = ["nose2", "numpy", "coverage", "coveralls", "parameterized", "black"]
 
-version_py = os.path.join(os.path.dirname(__file__), "diffusion_condensation", "version.py")
+version_py = os.path.join(
+    os.path.dirname(__file__), "diffusion_condensation", "version.py"
+)
 version = open(version_py).read().strip().split("=")[-1].replace('"', "").strip()
 
 readme = open("README.md").read()
