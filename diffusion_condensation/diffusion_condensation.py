@@ -171,9 +171,7 @@ class Diffusion_Condensation(object):
 
         return
 
-    def transform(
-        self
-    ):
+    def transform(self):
         """Computes diffusion homology from manifold geometry.
         Parameters
         ----------
@@ -184,12 +182,7 @@ class Diffusion_Condensation(object):
             cluster labels for each cell across granularities
             Diffusion Condensation
         """
-        (self.NxTs,
-         self.Xs,
-         self.Ks,
-         self.merges,
-         self.Ps
-        ) = condense.condense(
+        (self.NxTs, self.Xs, self.Ks, self.merges, self.Ps) = condense.condense(
             self.manifold,
             self.partition_clusters,
             self.scale,
@@ -230,7 +223,7 @@ class Diffusion_Condensation(object):
             Condensation process as computed on X
         """
         return visualize.build_condensation_tree(
-            self.data_pca, self.diff_op, self.NxTs, self.merges, self.Ps
+            self.data_pca, self.diff_op, self.NxTs,self.merges, self.Ps
         )
 
     def get_homology_clusters(self, cluster_level):

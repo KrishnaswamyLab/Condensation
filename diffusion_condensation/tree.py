@@ -53,9 +53,7 @@ def build_manifold(
         N, features = data_input.shape
 
         # Computing compression features
-        n_pca = compress.get_compression_features(
-            N, features, n_pca
-        )
+        n_pca = compress.get_compression_features(N, features, n_pca)
 
         with tasklogger.log_task("PCA"):
             pca_op = sklearn.decomposition.PCA(n_components=n_pca)
@@ -70,7 +68,7 @@ def build_manifold(
             X, granularity=granularity
         )
 
-        #NxTs, Xs, Ks, Merges, Ps = condense.condense(
+        # NxTs, Xs, Ks, Merges, Ps = condense.condense(
         #    X,
         #    clusters,
         #    scale,
@@ -78,14 +76,14 @@ def build_manifold(
         #    merge_threshold,
         #    n_jobs,
         #    random_state=random_state,
-        #)
+        # )
 
     return (
-        #NxTs,
-        #Xs,
-        #Ks,
-        #Merges,
-        #Ps,
+        # NxTs,
+        # Xs,
+        # Ks,
+        # Merges,
+        # Ps,
         X,
         diff_op,
         data_pca,
