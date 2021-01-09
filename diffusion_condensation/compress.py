@@ -6,7 +6,7 @@ import sklearn.neighbors
 import scipy.spatial.distance
 
 
-def get_compression_features(N, features, n_pca):
+def get_compression_features(N, features, n_pca, partitions, landmarks):
     """Short summary.
 
     Parameters
@@ -17,6 +17,10 @@ def get_compression_features(N, features, n_pca):
         Description of parameter `features`.
     n_pca : type
         Description of parameter `n_pca`.
+    partitions : type
+        Description of parameter `partitions`.
+    landmarks : type
+        Description of parameter `landmarks`.
 
     Returns
     -------
@@ -31,7 +35,125 @@ def get_compression_features(N, features, n_pca):
 
         n_pca = 100
 
-    return n_pca
+    # if N<100000:
+    #     partitions=None
+    if partitions != None and partitions >= N:
+        partitions = None
+
+    if partitions != None and partitions > 50000:
+        partitions = 50000
+    elif N > 100000:
+        partitions = 20000
+
+    return n_pca, partitions
+
+
+def cluster_components(data_subset, num_cluster, size, random_state=None):
+    """Short summary.
+
+    Parameters
+    ----------
+    data_subset : type
+        Description of parameter `data_subset`.
+    num_cluster : type
+        Description of parameter `num_cluster`.
+    size : type
+        Description of parameter `size`.
+    random_state : integer or numpy.RandomState, optional, default: None
+        The generator used to initialize MiniBatchKMeans.
+        If an integer is given, it fixes the seed.
+        Defaults to the global `numpy` random number generator
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
+    if data_subset.shape[0] == 1:
+        return [0]
+    k = np.ceil(data_subset.shape[0] / size).astype(int)
+    # print(data_subset.shape)
+    # print(k)
+    if k > num_cluster:
+        k = num_cluster
+    # print(k)
+    mbk = sklearn.cluster.MiniBatchKMeans(
+        init="k-means++",
+        n_clusters=k,
+        batch_size=k * 10,
+        n_init=10,
+        max_no_improvement=10,
+        verbose=0,
+        random_state=random_state,
+    ).fit(data_subset)
+    return mbk.labels_
+
+
+def subset_data(data, desired_num_clusters, n_jobs, num_cluster=100, random_state=None):
+    """Short summary.
+
+    Parameters
+    ----------
+    data : type
+        Description of parameter `data`.
+    desired_num_clusters : type
+        Description of parameter `desired_num_clusters`.
+    n_jobs : type
+        Description of parameter `n_jobs`.
+    num_cluster : type
+        Description of parameter `num_cluster`.
+    random_state : integer or numpy.RandomState, optional, default: None
+        The generator used to initialize MiniBatchKMeans.
+        If an integer is given, it fixes the seed.
+        Defaults to the global `numpy` random number generator
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
+    N = data.shape[0]
+    size = int(N / desired_num_clusters)
+    with tasklogger.log_task("partitions"):
+
+        mbk = sklearn.cluster.MiniBatchKMeans(
+            init="k-means++",
+            n_clusters=num_cluster,
+            batch_size=num_cluster * 10,
+            n_init=10,
+            max_no_improvement=10,
+            verbose=0,
+            random_state=random_state,
+        ).fit(data)
+
+        clusters = mbk.labels_
+        clusters_unique, cluster_counts = np.unique(clusters, return_counts=True)
+        clusters_next_iter = clusters.copy()
+
+        while np.max(cluster_counts) > np.ceil(N / desired_num_clusters):
+            min_val = 0
+            partitions_id_uni = joblib.Parallel(n_jobs=n_jobs)(
+                joblib.delayed(cluster_components)(
+                    data[np.where(clusters == clusters_unique[i])[0], :],
+                    num_cluster,
+                    size,
+                    random_state=random_state,
+                )
+                for i in range(len(clusters_unique))
+            )
+
+            for i in range(len(clusters_unique)):
+                loc = np.where(clusters == clusters_unique[i])[0]
+                clusters_next_iter[loc] = np.array(partitions_id_uni[i]) + min_val
+                min_val = min_val + np.max(np.array(partitions_id_uni[i])) + 1
+
+            clusters = clusters_next_iter.copy()
+            clusters_unique, cluster_counts = np.unique(clusters, return_counts=True)
+
+    return clusters
+
 
 def merge_clusters(diff_pot_unmerged, clusters):
     """Short summary.
