@@ -223,7 +223,7 @@ class Diffusion_Condensation(object):
             Condensation process as computed on X
         """
         return visualize.build_condensation_tree(
-            self.data_pca, self.diff_op, self.NxTs,self.merges, self.Ps
+            self.data_pca, self.diff_op, self.NxTs, self.merges, self.Ps
         )
 
     def get_homology_clusters(self, cluster_level):
