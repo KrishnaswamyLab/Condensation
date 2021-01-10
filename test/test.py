@@ -6,7 +6,7 @@ import parameterized
 warnings.simplefilter("error")
 
 
-@parameterized.parameterized([(None,None), (None,100)])
+@parameterized.parameterized([(None, None), (None, 100)])
 def test(partitions, landmarks):
     X = np.random.normal(0, 1, (200, 200))
     dc_op = dc.Diffusion_Condensation(
