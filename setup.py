@@ -22,9 +22,9 @@ version = open(version_py).read().strip().split("=")[-1].replace('"', "").strip(
 readme = open("README.md").read()
 
 setup(
-    name="multiscale_phate",
+    name="diffusion_condensation",
     version=version,
-    description="multiscale_phate",
+    description="diffusion_condensation",
     author="Manik Kuchroo & Scott Gigante, Yale University",
     author_email="manik.kuchroo@yale.edu",
     packages=find_packages(),
@@ -36,16 +36,15 @@ setup(
     test_suite="nose2.collector.collector",
     long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/KrishnaswamyLab/Multiscale_PHATE",
-    download_url="https://github.com/KrishnaswamyLab/Multiscale_PHATE/archive/v{}.tar.gz".format(
+    url="https://github.com/KrishnaswamyLab/Diffusion_Condensation",
+    download_url="https://github.com/KrishnaswamyLab/Diffusion_Condensation/archive/v{}.tar.gz".format(
         version
     ),
     keywords=[
         "big-data",
+        "Topological-data-analysis",
         "computational-biology",
-        "dimensionality-reduction",
-        "visualization",
-        "embedding",
+        "clustering",
         "manifold-learning",
     ],
     classifiers=[
