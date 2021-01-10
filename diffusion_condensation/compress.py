@@ -6,7 +6,7 @@ import sklearn.neighbors
 import scipy.spatial.distance
 
 
-def get_compression_features(N, features, n_pca, partitions, landmarks):
+def get_compression_features(N, features, n_pca):
     """Short summary.
 
     Parameters
@@ -35,17 +35,7 @@ def get_compression_features(N, features, n_pca, partitions, landmarks):
 
         n_pca = 100
 
-    # if N<100000:
-    #     partitions=None
-    if partitions != None and partitions >= N:
-        partitions = None
-
-    if partitions != None and partitions > 50000:
-        partitions = 50000
-    elif N > 100000:
-        partitions = 20000
-
-    return n_pca, partitions
+    return n_pca
 
 
 def cluster_components(data_subset, num_cluster, size, random_state=None):
