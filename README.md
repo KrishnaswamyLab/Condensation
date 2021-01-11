@@ -1,7 +1,7 @@
 Diffusion Condensation
 ================
 
-[![Latest PyPi version](https://img.shields.io/pypi/v/multiscale_phate.svg)](https://pypi.org/project/multiscale_phate/)
+[![Latest PyPi version](https://img.shields.io/pypi/v/diffusion_condensation.svg)](https://pypi.org/project/diffusion_condensation/)
 [![Travis CI Build](https://api.travis-ci.com/KrishnaswamyLab/Diffusion_Condensation.svg?branch=master)](https://travis-ci.com/KrishnaswamyLab/Diffusion_Condensation/)
 [![Coverage Status](https://coveralls.io/repos/github/KrishnaswamyLab/Diffusion_Condensation/badge.svg?branch=master)](https://coveralls.io/github/KrishnaswamyLab/Diffusion_Condensation?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/KrishnaswamyLab.svg?style=social&label=Follow)](https://twitter.com/KrishnaswamyLab)
